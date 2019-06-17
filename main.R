@@ -8,7 +8,19 @@ source('scripts/addresslocator.R')
 
 
 # load in data
-hotels <- read.csv('data/hotels_amsterdam.csv')
+hotels <- read.csv('data/hotels_amsterdam.csv', stringsAsFactors = FALSE)
+hotels <- hotels[1:nrow(hotels)-1,]
+hotels[hotels=="P CORNELISZ HOOFTSTR"]<-"PIETER CORNELISZ HOOFTSTRAAT"
+hotels[hotels=="PIETER JACOBSZOONDWARSSTRAAT"]<-"pieter jacobszdwarsstraat"
+hotels[hotels=="PROVINCIALE WEG"]<-"provincialeweg"
+hotels[hotels=="1054BV"]<-""
+hotels[hotels=="1E C HUYGENSSTR"]<- "Eerste+Constantijn+Huygensstraat"
+hotels[hotels=="103-105"]<- 103
+
+
+hotels[hotels=="315-331"] <- 315
+hotels[hotels=="387-390"] <- 387
+
 nbr <- geojsonio::geojson_read("data/GEBIED_BUURTEN.json",what = "sp")
 
 
@@ -25,6 +37,13 @@ keeps <- c("Buurt_code","Buurt","Stadsdeel_code", "2018_tot","geometry")
 nbr<- nbr[keeps]
 plot(nbr)
 
+start =1
+for (row in 1:nrow(hotels)){
+  address <- paste(hotels[row,"STRAAT_2014"],hotels[row,"HUISID_2014"], hotels[row,"POSTCODE_2014"], "Amsterdam")
+  print(locateAddress(address))
+  print(paste(start, "/", nrow(hotels)))
+  start = start +1 
+} 
 
 
 
