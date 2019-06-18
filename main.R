@@ -37,12 +37,21 @@ keeps <- c("Buurt_code","Buurt","Stadsdeel_code", "2018_tot","geometry")
 nbr<- nbr[keeps]
 plot(nbr)
 
-start =1
+hotels$lat <- 0.001
+hotels$lon <- 0.001
+# as.character(hotels$lat)
+# as.character(hotels$lon)
+
+
+
 for (row in 1:nrow(hotels)){
+
   address <- paste(hotels[row,"STRAAT_2014"],hotels[row,"HUISID_2014"], hotels[row,"POSTCODE_2014"], "Amsterdam")
-  print(locateAddress(address))
-  print(paste(start, "/", nrow(hotels)))
-  start = start +1 
+  coordinates <- locateAddress(address)
+  print(coordinates$lat)
+  hotels[row,"lat"] <- coordinates$lat
+  print(hotels[row,"lat"])
+  hotels[row,"lon"] <- coordinates$lon
 } 
 
 

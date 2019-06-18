@@ -12,12 +12,17 @@ locateAddress <- function(address){
   query <- paste0(prefix,address,postfix)
   
   # Make request
-  response <- as.data.frame(content(GET(query)))
-  
+  response <- data.frame(content(GET(query)),stringsAsFactors = F)
+  if (length(response) > 0){
   # Format response
   keep <- c("lat","lon")
   response <- response[keep]
-  
+  print(response)
+  return(response)
+  }else{
+    response <- data.frame(matrix(data=c(NA,NA),ncol = 2))
+    colnames(response)<- c("lat", "lon")
+  }
   return(response)
 }
 
