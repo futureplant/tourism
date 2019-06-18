@@ -17,12 +17,13 @@ locateAddress <- function(address){
   # Format response
   keep <- c("lat","lon")
   response <- response[keep]
-  print(response)
+  Sys.sleep(1)
   return(response)
   }else{
     response <- data.frame(matrix(data=c(NA,NA),ncol = 2))
     colnames(response)<- c("lat", "lon")
   }
+  Sys.sleep(1)
   return(response)
 }
 
