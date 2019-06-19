@@ -91,18 +91,18 @@ st_write(nbr,dsn='data/neighbourhoods.geosjon', driver='GeoJSON')
 hotels$popup <- paste("<strong>", hotels$ï..HOTELNAAM_2014, "</strong><br/>Beds: ",hotels$BED_2014)
 # https://www.google.nl/search?q=IBIS+AMSTERDAM+CITY+WEST&oq=IBIS+AMSTERDAM+CITY+WEST
 
-bins <- c(0, 20, 40, 60, 100)
+bins <- c(0, 10, 25, 50, 100)
 pal <- colorBin("YlOrRd", domain = states$density, bins = bins)
 
 m <- leaflet() %>% setView(lng = 4.898940, lat = 52.382676, zoom = 11)
 m %>% addProviderTiles(providers$OpenStreetMap.BlackAndWhite) %>%
 addPolygons(data = nbr,color = "#444444", weight = 0.4, smoothFactor = 0.5,
-            opacity = 1.0, fillOpacity = 0.2,
+            opacity = 1.0, fillOpacity = 0.3,
             fillColor = ~pal(bed_pressure),
             highlightOptions = highlightOptions(color = "white", weight = 2,
                                                 bringToFront = TRUE),  popup = ~popup) %>%
   addLegend("bottomright", pal = pal, values = nbr$bed_pressure,
-            title = "Bed pressure",
+            title = "Bed pressure (%)",
             opacity = 0.5, na.label = "No beds") %>%
   addMarkers(data=hotels, clusterOptions = markerClusterOptions(), popup = ~popup)
 
