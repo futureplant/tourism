@@ -5,6 +5,8 @@ library(geojsonio)
 library(sf)
 library(leaflet)
 library(htmltools)
+library(htmlwidgets)
+library(tidyverse)
 
 source('scripts/addresslocator.R')
 
@@ -25,7 +27,7 @@ hotels[hotels=="387-390"] <- 387
 
 nbr <- geojsonio::geojson_read("data/GEBIED_BUURTEN.json",what = "sp")
 nbr <- st_as_sf(nbr)
-polygon_geometry <- st_geometry(nbr)
+#polygon_geometry <- st_geometry(nbr)
 
 
 inhabs_raw <- read.csv('data/inwoners_amsterdam.csv',stringsAsFactors = FALSE)
@@ -61,27 +63,35 @@ hotels <- st_as_sf(hotels, coords = c('lon', 'lat'), crs = 4326, na.fail=F)
 
 joined <- st_join(hotels,nbr)
 
-beds <- data.frame(matrix(ncol = 2, nrow = 0))
+beds <- data.frame(matrix(ncol = 2, nrow = 0),stringsAsFactors = F)
 x <- c("Buurt_code", "Beds")
 colnames(beds) <- x
 
 for (neighbourhood in unique(joined$Buurt_code)){
   localHotels <- joined[which(joined$Buurt_code == neighbourhood),]
   bedCount <- sum(localHotels$BED_2014)
-  plusbeds <- data.frame(matrix(c(neighbourhood,bedCount),ncol=2))
+  plusbeds <- data.frame(matrix(c(neighbourhood,bedCount),ncol=2),stringsAsFactors = F)
   colnames(plusbeds) <- x
   beds <- rbind(beds,plusbeds)
 }
+beds$Beds <- as.numeric(beds$Beds)
 
 
 nbr <- merge(nbr,beds,all.x=T)
 options(scipen = 999)
-nbr$bed_pressure <- as.numeric(nbr$Beds) / as.numeric(nbr$`2018_tot`)*100
+nbr$bed_pressure <- round((as.numeric(as.character(nbr$Beds))/(as.numeric(as.character(nbr$Beds))+as.numeric(as.character(nbr$`2018_tot` )))*100))
+hist_data <- ifelse(nbr$bed_pressure > 150, 150, nbr$bed_pressure)
+
+
+nbr$popup <- paste("<strong>", nbr$Buurt, "</strong><br/>Hotelbeds: ", 
+                   nbr$Beds, "<br/>Inhabitants: ", nbr$`2018_tot`, "<br/>Bed pressure: ", nbr$bed_pressure )
 
 st_write(nbr,dsn='data/neighbourhoods.geosjon', driver='GeoJSON')
 
-hotels$popup <- paste("<strong>", hotels$ï..HOTELNAAM_2014, "</strong><br/>Rooms: ",hotels$KAM_2014)
+hotels$popup <- paste("<strong>", hotels$ï..HOTELNAAM_2014, "</strong><br/>Beds: ",hotels$BED_2014)
 # https://www.google.nl/search?q=IBIS+AMSTERDAM+CITY+WEST&oq=IBIS+AMSTERDAM+CITY+WEST
+
+
 
 m <- leaflet() %>% setView(lng = 4.898940, lat = 52.382676, zoom = 11)
 m %>% addProviderTiles(providers$OpenStreetMap.BlackAndWhite) %>%
@@ -89,10 +99,10 @@ addPolygons(data = nbr,color = "#444444", weight = 0.4, smoothFactor = 0.5,
             opacity = 1.0, fillOpacity = 0.2,
             fillColor = ~colorQuantile("YlOrRd", bed_pressure)(bed_pressure),
             highlightOptions = highlightOptions(color = "white", weight = 2,
-                                                bringToFront = TRUE), label = ~Buurt) %>%
+                                                bringToFront = TRUE),  popup = ~popup) %>%
   addLegend("bottomright", pal = colorQuantile("YlOrRd",nbr$bed_pressure), values = nbr$bed_pressure,
             title = "Bed pressure",
-            opacity = 0.5
+            opacity = 0.5, na.label = "No beds", labels = c("a","b","c","d")
   ) %>%
   addMarkers(data=hotels, clusterOptions = markerClusterOptions(), popup = ~popup)
 
