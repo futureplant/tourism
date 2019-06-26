@@ -97,13 +97,13 @@ airdf <- airdf[keeps]
 nbr <- merge(nbr, airdf,all.x=T)
 
 # convert data to proper classes
-
+nbr$Beds <- as.numeric(as.character(nbr$Beds))
+nbr$`2018_tot` <- as.numeric(as.character(nbr$'2018_tot'))
 
 
 
 # calculate hotelbed pressure: bed pressure = hotelbeds / (hotelbeds + inhabitants)
-nbr$hotelbed_pressure <- round((as.numeric(as.character(nbr$Beds))/(as.numeric(as.character(nbr$Beds))+as.numeric(as.character(nbr$`2018_tot` )))*100))
-hist_data <- ifelse(nbr$hotelbed_pressure > 150, 150, nbr$hotelbed_pressure)
+nbr$hotelbed_pressure <- round(nbr$Beds/(nbr$`2018_tot`+nbr$Beds)*100)
 
 # create a column with html text that will display as a popup for the hotel layer
 nbr$hotelpopup <- paste("<strong>", nbr$Buurt, "</strong><br/>Hotelbeds: ", 
@@ -111,20 +111,29 @@ nbr$hotelpopup <- paste("<strong>", nbr$Buurt, "</strong><br/>Hotelbeds: ",
 
 
 # calculate airbnb pressure: airbnbbed pressure = airbnbbeds / (inhabitants)
-nbr$airbnbbed_pressure <- round((as.numeric(as.character(nbr$Airbnb_BedsCount))/(as.numeric(as.character(nbr$`2018_tot` )))*100))
-hist_data <- ifelse(nbr$airbnbbed_pressure > 150, 150, nbr$airbnbbed_pressure)
+nbr$airbnbbed_pressure <- round(nbr$Airbnb_BedsCount/(nbr$`2018_tot`+nbr$Airbnb_BedsCount)*100)
 
 # create a column with html text that will display as a popup for the airbnb layer
 nbr$airbnbpopup <- paste("<strong>", nbr$Buurt, "</strong><br/>AirBnB beds: ", 
                          nbr$Airbnb_BedsCount, "<br/>Inhabitants: ", nbr$`2018_tot`, "<br/>AirBnB Bed pressure: ", nbr$airbnbbed_pressure )
 
+# calculate total pressure: total pressure = airbnbbeds + hotelbeds / (inhabitants)
+nbr$total_pressure <- round((nbr$Airbnb_BedsCount+nbr$Beds)/(nbr$`2018_tot`+nbr$Beds + nbr$Airbnb_BedsCount)*100)
+
+# create a column with html text that will display as a popup for the airbnb layer
+nbr$totalpopup <- paste("<strong>", nbr$Buurt, "</strong><br/>Total beds: ", 
+                         (nbr$Airbnb_BedsCount+nbr$Beds), "<br/>Inhabitants: ", nbr$`2018_tot`, "<br/>Total Bed pressure: ", nbr$airbnbbed_pressure )
+
 
 # write the neighbourhood datasite to file
-st_write(nbr,dsn='data/neighbourhoods.geosjon', driver='GeoJSON')
+st_write(nbr,dsn='output/neighbourhoods.geojson', driver='GeoJSON')
+
 
 # create a column with html text that will display as a popup
 hotels$popup <- paste("<strong>", hotels$ï..HOTELNAAM_2014, "</strong><br/>Beds: ",hotels$BED_2014)
 # https://www.google.nl/search?q=IBIS+AMSTERDAM+CITY+WEST&oq=IBIS+AMSTERDAM+CITY+WEST
+
+st_write(hotels,dsn='output/hotels.geojson', driver='GeoJSON')
 
 bins <- c(0, 10, 25, 50, 100)
 pal <- colorBin("YlOrRd", domain = states$density, bins = bins)
@@ -141,12 +150,19 @@ addPolygons(data = nbr,color = "#444444", weight = 0.4, smoothFactor = 0.5,
               fillColor = ~pal(airbnbbed_pressure),
               highlightOptions = highlightOptions(color = "white", weight = 2,
                                                   bringToFront = TRUE),  popup = ~airbnbpopup, group = "AirBnB Beds") %>%
+
+  addPolygons(data = nbr,color = "#444444", weight = 0.4, smoothFactor = 0.5,
+              opacity = 1.0, fillOpacity = 0.3,
+              fillColor = ~pal(total_pressure),
+              highlightOptions = highlightOptions(color = "white", weight = 2,
+                                                  bringToFront = TRUE),  popup = ~totalpopup, group = "Total") %>%
+  
   addLegend("bottomright", pal = pal, values = nbr$hotelbed_pressure,
             title = "Bed pressure (%)",
             opacity = 0.5, na.label = "No beds") %>%
   addMarkers(data=hotels, clusterOptions = markerClusterOptions(), popup = ~popup) %>%
   addLayersControl(
-    baseGroups = c("Hotel Beds", "AirBnB Beds"),
+    baseGroups = c("Hotel Beds", "AirBnB Beds", "Total"),
     options = layersControlOptions(collapsed = FALSE))
 
 
