@@ -75,6 +75,11 @@ merged <- merge(nghbrhd@data, lookup_cluster, by.x = 'similarityCluster',
 
 nghbrhd@data$cluster_label <- merged[,'cluster_label']
 
+
+nghbrhd <- st_as_sf(nghbrhd)
+st_write(nghbrhd, dsn = 'output/clusternbr.geojson', driver = 'GeoJSON')
+
+
 pal <- colorFactor(c(rainbow(2), rainbow(3), rainbow(4)), domain = 1:number_clusters)
 pal1 <- colorFactor(rainbow(n=4), domain = 1:number_clusters)
 pal2 <- colorFactor(rainbow(n=4), domain = nghbrhd@data$cluster_label)
@@ -87,6 +92,6 @@ m %>% addProviderTiles(providers$OpenStreetMap.BlackAndWhite) %>%
               opacity = 1.0, fillOpacity = 0.5,
               fillColor = ~pal1(similarityCluster),
               highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = TRUE)) %>%
-  addLegend("bottomright", pal = pal2, values = nghbrhd@data$cluster_label, 
+  addLegend("bottomright", pal = pal2, values = nghbrhd$cluster_label, 
             labels = c('Group 1', 'Group2', 'Group3'),
             title = "Clusters", opacity = 0.5)
