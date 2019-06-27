@@ -79,19 +79,38 @@ nghbrhd@data$cluster_label <- merged[,'cluster_label']
 nghbrhd <- st_as_sf(nghbrhd)
 st_write(nghbrhd, dsn = 'output/clusternbr.geojson', driver = 'GeoJSON')
 
+nghbrhd$similarityCluster <- as.factor(nghbrhd$similarityCluster) #, levels = c(1,2,3), labels = c('AirBnB', 'Mix', 'Hotel'))
 
-pal <- colorFactor(c(rainbow(2), rainbow(3), rainbow(4)), domain = 1:number_clusters)
-pal1 <- colorFactor(rainbow(n=4), domain = 1:number_clusters)
-pal2 <- colorFactor(rainbow(n=4), domain = nghbrhd@data$cluster_label)
+# 
+# pal <- colorFactor(c(rainbow(2), rainbow(3), rainbow(4)), domain = 1:number_clusters)
+# pal1 <- colorFactor(rainbow(n=4), domain = 1:number_clusters)
+# pal2 <- colorFactor(rainbow(n=4), domain = nghbrhd@data$cluster_label)
+# 
+# 
+# m <- leaflet() %>% setView(lng = 4.898940, lat = 52.382676, zoom = 11)
+# m %>% addProviderTiles(providers$OpenStreetMap.BlackAndWhite) %>%
+#   addPolygons(data = nghbrhd,color = "#444444", weight = 0.4, smoothFactor = 0.5,
+#               opacity = 1.0, fillOpacity = 0.5,
+#               fillColor = ~pal1(similarityCluster),
+#               popup = ~as.character(similarityCluster),
+#               highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = TRUE)) %>%
+#   addLegend("bottomright", pal = pal1, values = nghbrhd$similarityCluster,
+#             labels = c('Airbnb','Hotel', 'Mix', ''),
+#             title = "Clusters", opacity = 0.5)
+# # pal = pal1, values = nghbrhd$similarityCluster, 
 
 
 
-m <- leaflet() %>% setView(lng = 4.898940, lat = 52.382676, zoom = 11)
+clust_viz <- factor(clusters, levels = c(1,2,3), labels = c('AirBnB', 'Mix', 'Hotel'))
+nghbrhd$clust_viz <- clust_viz
+
+pal1 <- colorFactor(rainbow(n=4), domain = nghbrhd$clust_viz)
+
 m %>% addProviderTiles(providers$OpenStreetMap.BlackAndWhite) %>%
   addPolygons(data = nghbrhd,color = "#444444", weight = 0.4, smoothFactor = 0.5,
               opacity = 1.0, fillOpacity = 0.5,
-              fillColor = ~pal1(similarityCluster),
+              fillColor = ~pal1(clust_viz),
+              popup = ~as.character(clust_viz),
               highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = TRUE)) %>%
-  addLegend("bottomright", pal = pal2, values = nghbrhd$cluster_label, 
-            labels = c('Group 1', 'Group2', 'Group3'),
+  addLegend("bottomright", pal = pal1, values = nghbrhd$clust_viz,
             title = "Clusters", opacity = 0.5)
