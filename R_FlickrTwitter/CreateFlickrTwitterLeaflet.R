@@ -1,7 +1,10 @@
 #function to create Flickr and Twitter Lealet
 
-FlickrTwitter <- function(flickr_geojson,twitter_geojson){
+flickr_geojson <- rgdal::readOGR(dsn='./data/GeotaggedFlickr_24june2019.geojson')
+twitter_geojson <- rgdal::readOGR(dsn='./data/tweets_v2.geojson')
 
+FlickrTwitter <- function(flickr_geojson,twitter_geojson){
+  
   pal_flickr <- colorFactor(palette = 'viridis', domain = flickr_geojson$traveler_type)
   pal_twitter <- colorFactor(palette = rainbow(length(unique(twitter_geojson$hashtag))), 
                              domain = twitter_geojson$hashtag)
@@ -21,7 +24,8 @@ FlickrTwitter <- function(flickr_geojson,twitter_geojson){
     addCircleMarkers(group = "Twitter",data = twitter_geojson,radius = 4,stroke=F,fillOpacity = 0.7,color = ~pal_twitter(hashtag),
                      popup = paste("<b>Neighbourhood:</b>", twitter_geojson$neighbourh, "<br>",
                                    "<b>Tweet date:</b>", twitter_geojson$created, "<br>",
-                                   "<b>Text:</b>", twitter_geojson$text))%>%
+                                   "<b>Text:</b>", twitter_geojson$text,
+                                   "<b>Traveler type:</b>", twitter_geojson$Descriptio))%>%
     
     addLegend(group = "Flickr",data =flickr_geojson ,"topleft", pal = pal_flickr, values = ~traveler_type,title = "Traveler type")%>%
     addLegend(group = "Twitter",data =twitter_geojson ,"topleft", pal = pal_twitter, values = ~hashtag,title = "Twitter hashtag")%>%
@@ -32,4 +36,31 @@ FlickrTwitter <- function(flickr_geojson,twitter_geojson){
     hideGroup("Twitter")
   return(m)
 }
-  
+
+df_twitter <- data.frame(matrix(0, ncol = 4, nrow = length(unique(twitter_geojson$hashtag))))
+colnames(df_twitter)[1] <- "hashtag"
+colnames(df_twitter)[2] <- "count_tag_tourist"
+colnames(df_twitter)[3] <- "total_tag"
+colnames(df_twitter)[4] <- "pct"
+hashtags <- unique(twitter_geojson$hashtag)
+for (row in 1:length(hashtags)){
+  df_twitter$hashtag[row] <- as.character(hashtags[row])
+  tag <- as.character(hashtags[row])
+  total_tag <- length(twitter_geojson[ which(twitter_geojson$hashtag==tag),])
+  tag_tourist <- length(twitter_geojson[ which(twitter_geojson$hashtag==tag & twitter_geojson$Descriptio=='tourist'), ])
+  df_twitter$count_tag_tourist[row] <- tag_tourist
+  df_twitter$total_tag[row] <- total_tag
+  df_twitter$pct[row] <- (tag_tourist/total_tag)*100
+}
+
+library(ggplot2)
+theme_set(theme_bw())
+
+# Draw plot
+ggplot(df_twitter, aes(x=hashtag, y=pct)) + 
+  geom_bar(stat="identity", width=.5, fill="tomato3") + 
+  labs(title="Percentage of tourist per hashtag",
+       caption="source: Twitter") + 
+  theme(axis.text.x = element_text(angle=65, vjust=0.6))+
+  xlab('Hashtag')+ylab('%')
+
