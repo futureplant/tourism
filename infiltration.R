@@ -57,6 +57,7 @@ nbr <- left_join(nbr,distances,by="Buurt_code")
 
 pal <- colorNumeric("YlOrRd", c(nbr$dist2hot2019,nbr$dist2hot2018,nbr$dist2hot2017,nbr$dist2hot2016,nbr$dist2hot2015),
                     na.color = "transparent")
+st_write(nbr, 'output/neighbourhoods.geojson', delete_dsn=T)
 
 m <- leaflet() %>% setView(lng = 4.898940, lat = 52.382676, zoom = 11)
 m %>% addProviderTiles(providers$OpenStreetMap.BlackAndWhite) %>%
