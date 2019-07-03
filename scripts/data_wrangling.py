@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 # coding: utf-8
+#####################################################################################
+##   Scrip that is part of A0_Retrieving_InsideAirbnbData
+##   Functions to process and aggregate Inside Airbnb listing data     
+#################################################################
 
 import pandas as pd
 import geopandas as gpd
@@ -8,6 +12,20 @@ from shapely.geometry import Point
 import numpy as np
 
 def listing2gdf(url):
+    
+        """
+    Load listing data from a url as a GeoPandas Dataframe
+
+    Parameters
+    ----------
+    url : str
+
+    Returns
+    -------
+    GeoPandas Dataframe Object
+        A pandas dataframe containing geometry 
+
+    """
     
     #create dataframe from url
     cols= ['id','room_type','beds','latitude','longitude',
@@ -24,6 +42,20 @@ def listing2gdf(url):
     return gdf
 
 def census2gdf(geojson_path):
+
+    """
+    Load neighbourhood geojson to a GeoPandas Dataframe 
+    
+    Parameters
+    ----------
+    geojson_path : str
+
+    Returns
+    -------
+    GeoPandas Dataframe Object
+        A pandas dataframe containing geometry 
+        
+    """
     
     #load census data from geojson and calculate area
     nbh_geojson = gpd.read_file(geojson_path, driver='GeoJSON')
@@ -34,6 +66,32 @@ def census2gdf(geojson_path):
 
 
 def aggregate(airbnb_gdf,nbh_gdf,room_gdf,entire_home_gdf,superhost_gdf,illegal_gdf):
+
+    """
+    Load Airbnb listing and neighbourhood GeoPandas Dataframes and aggregate them into a single GeoPandas Dataframe
+
+    Parameters
+    ----------
+    airbnb_gdf : GeoPandas Dataframe object
+        Dataframe containing listing information such as number of beds, availaiblity and etc. 
+    nbh_gdf : GeoPandas Dataframe object
+        Dataframe containing neighbourhood geometries and information such as population
+    room_gdf : GeoPandas Dataframe object
+        Subset of airbnb_gdf containig only listings that rent rooms 
+    entire_home_gdf : GeoPandas Dataframe object
+        Subset of airbnb_gdf containig only listings that rent entire lodges
+    superhost_gdf : GeoPandas Dataframe object
+        Subset of airbnb_gdf containig only listings that are superhost 
+    illegal_gdf : GeoPandas Dataframe object
+        Subset of airbnb_gdf containig only listings that are available more than 30 days
+       
+    Returns
+    -------
+    GeoPandas Dataframe bject
+        GeoPandas Dataframe containing neighbourhood geometries and Airbnb statistics
+
+    """
+
     #perform spatial join
     join_all = gpd.sjoin(nbh_gdf,airbnb_gdf,how='inner',op='contains').groupby('Buurt').size().reset_index(name='Airbnb_ListingCount')
     nbh_gdf = nbh_gdf.merge(join_all,on='Buurt',how='outer')
@@ -66,6 +124,23 @@ def aggregate(airbnb_gdf,nbh_gdf,room_gdf,entire_home_gdf,superhost_gdf,illegal_
     return nbh_gdf
 
 def CalculateTouristIntensity(nbh_gdf,year):
+    
+        """
+    Calculate tourist intensity (Airbnb beds per inhabitant) and return a GeoPandas Dataframe 
+
+    Parameters
+    ----------
+    nbh_gdf : GeoPandas Dataframe object
+        Aggregated GeoPandas Dataframe returned by 'aggregate' function 
+    year : str
+        Year of the listing data
+
+    Returns
+    -------
+    GeoPandas Dataframe object
+        GeoPandas Dataframe object containing tourist intensity column
+
+    """
     
     #calculate tourist intensity (bed per 1000 inhabitants)
     #calculate population density (inhabitant per km2)
