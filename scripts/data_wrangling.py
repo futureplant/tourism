@@ -13,7 +13,7 @@ import numpy as np
 
 def listing2gdf(url):
     
-        """
+    """
     Load listing data from a url as a GeoPandas Dataframe
 
     Parameters
@@ -26,10 +26,8 @@ def listing2gdf(url):
         A pandas dataframe containing geometry 
 
     """
-    
     #create dataframe from url
-    cols= ['id','room_type','beds','latitude','longitude',
-           'availability_365','host_is_superhost','price','number_of_reviews']
+    cols= ['id','room_type','beds','latitude','longitude','availability_365','host_is_superhost','price','number_of_reviews']
     df = pd.read_csv(url,usecols=cols)
     df['price'] = df['price'].str.replace('$','')
     df['price'] = pd.to_numeric(df['price'],errors='coerce')
@@ -124,8 +122,7 @@ def aggregate(airbnb_gdf,nbh_gdf,room_gdf,entire_home_gdf,superhost_gdf,illegal_
     return nbh_gdf
 
 def CalculateTouristIntensity(nbh_gdf,year):
-    
-        """
+    """
     Calculate tourist intensity (Airbnb beds per inhabitant) and return a GeoPandas Dataframe 
 
     Parameters
