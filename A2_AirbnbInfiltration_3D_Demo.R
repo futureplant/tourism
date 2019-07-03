@@ -1,13 +1,19 @@
+##############################################################################
+## Function to create Mapdeck 3D visualizaiton of Airbnb infiltration
+##  Inputs is neighbourhoods_infiltration2018 geojson
+##  Output is a HTML containing 3D map visualization
+##  HTML demo is uploaded in different repository :
+##    https://github.com/WilliamTjiong/fairbnb-airbnbmapdeck
+###############################################################################
 
 #load libraries
 source('./source/EasyLoad.R')
 packages <- c('mapdeck','rgdal','sf','geojsonsf','htmlwidgets')
 EasyLoad(packages)
 
-key = read.delim('./mapbox_token.txt',header=F)
-key = toString(key[,1])
+key = 'input own key here'
 
-infiltration_geojson <-geojson_sf('./data/neighbourhoods_infiltration2018.geojson')
+infiltration_geojson <-geojson_sf('./output/airbnbinfiltration_data/neighbourhoods_infiltration2018.geojson')
 infiltration_geojson$dist2hot2018 <-as.numeric(infiltration_geojson$dist2hot2018)
 infiltration_geojson$Airbnb_TouristIntensity <-as.numeric(infiltration_geojson$Airbnb_TouristIntensity)
 infiltration_geojson$Airbnb_TouristIntensity <- infiltration_geojson$Airbnb_TouristIntensity *1000
